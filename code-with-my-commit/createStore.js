@@ -1,5 +1,5 @@
-import isPlainObject from 'lodash-es/isPlainObject';
-import $$observable from 'symbol-observable';
+import isPlainObject from 'lodash/isPlainObject'
+import $$observable from 'symbol-observable'
 
 /**
  * These are private action types reserved by Redux.
@@ -9,7 +9,7 @@ import $$observable from 'symbol-observable';
  */
 export var ActionTypes = {
   INIT: '@@redux/INIT'
-};
+}
 
 /**
  * Creates a Redux store that holds the state tree.
@@ -40,41 +40,37 @@ export var ActionTypes = {
  * 整个文件输出的函数仅此一个
  */
 export default function createStore(reducer, preloadedState, enhancer) {
-  var _ref2;
-  /* -------------- createStore 参数校验部分 -------------- */
+   /* -------------- createStore 参数校验部分 -------------- */
   /**
    * 参数校验，如果第二个形参传入的是函数，且第三个形参不传，则第二个实参代表 enhancer。
    * 换句话说，preloadedState 是可选配置。
    */
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
-    enhancer = preloadedState;
-    preloadedState = undefined;
+    enhancer = preloadedState
+    preloadedState = undefined
   }
-
   // 校验传入的 enhancer 实参是否是函数。
   if (typeof enhancer !== 'undefined') {
     if (typeof enhancer !== 'function') {
-      throw new Error('Expected the enhancer to be a function.');
+      throw new Error('Expected the enhancer to be a function.')
     }
 
-    return enhancer(createStore)(reducer, preloadedState);
+    return enhancer(createStore)(reducer, preloadedState)
   }
-
   // 校验传入的 reducer 实参是否是函数。
   if (typeof reducer !== 'function') {
-    throw new Error('Expected the reducer to be a function.');
+    throw new Error('Expected the reducer to be a function.')
   }
-
   /* -------------- createStore 正片部分 -------------- */
-  var currentReducer = reducer;
-  var currentState = preloadedState;
-  var currentListeners = [];
-  var nextListeners = currentListeners;
-  var isDispatching = false;
+  var currentReducer = reducer
+  var currentState = preloadedState
+  var currentListeners = []
+  var nextListeners = currentListeners
+  var isDispatching = false
 
   function ensureCanMutateNextListeners() {
     if (nextListeners === currentListeners) {
-      nextListeners = currentListeners.slice();
+      nextListeners = currentListeners.slice()
     }
   }
 
@@ -84,7 +80,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * @returns {any} The current state tree of your application.
    */
   function getState() {
-    return currentState;
+    return currentState
   }
 
   /**
@@ -113,26 +109,26 @@ export default function createStore(reducer, preloadedState, enhancer) {
   function subscribe(listener) {
     /* -------------- subscribe 参数校验部分 -------------- */
     if (typeof listener !== 'function') {
-      throw new Error('Expected listener to be a function.');
+      throw new Error('Expected listener to be a function.')
     }
 
     /* -------------- subscribe 正片部分 -------------- */
-    var isSubscribed = true;
+    var isSubscribed = true
 
-    ensureCanMutateNextListeners();
-    nextListeners.push(listener);
+    ensureCanMutateNextListeners()
+    nextListeners.push(listener)
 
     return function unsubscribe() {
       if (!isSubscribed) {
-        return;
+        return
       }
 
-      isSubscribed = false;
+      isSubscribed = false
 
-      ensureCanMutateNextListeners();
-      var index = nextListeners.indexOf(listener);
-      nextListeners.splice(index, 1);
-    };
+      ensureCanMutateNextListeners()
+      var index = nextListeners.indexOf(listener)
+      nextListeners.splice(index, 1)
+    }
   }
 
   /**
@@ -162,26 +158,30 @@ export default function createStore(reducer, preloadedState, enhancer) {
    */
   function dispatch(action) {
     /* -------------- dispatch 参数校验部分 -------------- */
-
     // action 要求是一个简单对象（plain object）
     if (!isPlainObject(action)) {
-      throw new Error('Actions must be plain objects. ' + 'Use custom middleware for async actions.');
+      throw new Error(
+        'Actions must be plain objects. ' +
+        'Use custom middleware for async actions.'
+      )
     }
 
     // 最基础的 dispatch 函数（没有接入三方中间件）接受的 action 对象必须要带 type 参数
     if (typeof action.type === 'undefined') {
-      throw new Error('Actions may not have an undefined "type" property. ' + 'Have you misspelled a constant?');
+      throw new Error(
+        'Actions may not have an undefined "type" property. ' +
+        'Have you misspelled a constant?'
+      )
     }
 
     // 标识位
     if (isDispatching) {
-      throw new Error('Reducers may not dispatch actions.');
+      throw new Error('Reducers may not dispatch actions.')
     }
 
     /* -------------- dispatch 正片部分 -------------- */
     try {
       // 处理过程锁
-      isDispatching = true;
       /**
        * 这是 Redux 的灵魂部分
        * 作用是将当前 state 和 action 交给 reducer 函数处理，计算出**新的 state**
@@ -194,18 +194,21 @@ export default function createStore(reducer, preloadedState, enhancer) {
        * 银行家的做法是在你取钱 -> 结算完毕过程中冻结其他存取操作（在本源码中是置 isDispatching 标识位为 true），
        * 你女朋友只能在你取钱 -> 结算过程以外的时间里取钱。
        */ 
-      currentState = currentReducer(currentState, action);
+      isDispatching = true
+      currentState = currentReducer(currentState, action)
     } finally {
-      isDispatching = false;
+      // 无论计算成功还是报错，最终都将标志位置为 false，以免阻碍下一个 action 的 dipatch。
+      isDispatching = false
     }
 
     // 此时 state 已经更新完毕，我们执行订阅的回调函数里拿到的是更新后的 state。
-    var listeners = currentListeners = nextListeners;
+    var listeners = currentListeners = nextListeners
     for (var i = 0; i < listeners.length; i++) {
-      listeners[i]();
+      listeners[i]()
     }
+
     // 此处设伏笔，在 applyMiddleware 里有妙用
-    return action;
+    return action
   }
 
   /**
@@ -220,11 +223,15 @@ export default function createStore(reducer, preloadedState, enhancer) {
    */
   function replaceReducer(nextReducer) {
     if (typeof nextReducer !== 'function') {
-      throw new Error('Expected the nextReducer to be a function.');
+      throw new Error('Expected the nextReducer to be a function.')
     }
 
-    currentReducer = nextReducer;
-    dispatch({ type: ActionTypes.INIT });
+    /**
+     * 1. 替换当前 Reducer
+     * 2. 初始化 state
+     */
+    currentReducer = nextReducer
+    dispatch({ type: ActionTypes.INIT })
   }
 
   /**
@@ -234,10 +241,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * https://github.com/zenparsing/es-observable
    */
   function observable() {
-    var _ref;
-
-    var outerSubscribe = subscribe;
-    return _ref = {
+    var outerSubscribe = subscribe
+    return {
       /**
        * The minimal observable subscription method.
        * @param {Object} observer Any object that can be used as an observer.
@@ -246,35 +251,38 @@ export default function createStore(reducer, preloadedState, enhancer) {
        * be used to unsubscribe the observable from the store, and prevent further
        * emission of values from the observable.
        */
-      subscribe: function subscribe(observer) {
+      subscribe(observer) {
         if (typeof observer !== 'object') {
-          throw new TypeError('Expected the observer to be an object.');
+          throw new TypeError('Expected the observer to be an object.')
         }
 
         function observeState() {
           if (observer.next) {
-            observer.next(getState());
+            observer.next(getState())
           }
         }
 
-        observeState();
-        var unsubscribe = outerSubscribe(observeState);
-        return { unsubscribe: unsubscribe };
+        observeState()
+        var unsubscribe = outerSubscribe(observeState)
+        return { unsubscribe }
+      },
+
+      [$$observable]() {
+        return this
       }
-    }, _ref[$$observable] = function () {
-      return this;
-    }, _ref;
+    }
   }
 
   // When a store is created, an "INIT" action is dispatched so that every
   // reducer returns their initial state. This effectively populates
   // the initial state tree.
-  dispatch({ type: ActionTypes.INIT });
+  dispatch({ type: ActionTypes.INIT })
 
-  return _ref2 = {
-    dispatch: dispatch,
-    subscribe: subscribe,
-    getState: getState,
-    replaceReducer: replaceReducer
-  }, _ref2[$$observable] = observable, _ref2;
+  return {
+    dispatch,
+    subscribe,
+    getState,
+    replaceReducer,
+    [$$observable]: observable
+  }
 }

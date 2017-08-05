@@ -10,10 +10,10 @@
 Redux 库十分简洁，只有 5 个 API 文件，以我目前的视野，对其重要程度排个序。
 
 - `createStore.js`
+- `combineReducers.js`
 - `bindActionCreators.js`
 - `compose.js`
 - `applyMiddleware.js`
-- `combineReducers.js`
 
 既然没啥经验，就以自己认为的重要度一一分析这几个文件吧。围绕着每个文件，我会首先通过预览抽取出文件中使用得比较精髓的原生 API，然后再站在熟悉这些原生 API 的基础上分析文件，总而言之我希望自己基本做到以下几个步骤：
 1. 预习文件中的原生 API

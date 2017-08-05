@@ -276,6 +276,10 @@ export default function createStore(reducer, preloadedState, enhancer) {
   // When a store is created, an "INIT" action is dispatched so that every
   // reducer returns their initial state. This effectively populates
   // the initial state tree.
+  /**
+   * 触发一个内部 action
+   * 用 raducer 的 initial state 初始化 state 整个树
+   */
   dispatch({ type: ActionTypes.INIT })
 
   return {

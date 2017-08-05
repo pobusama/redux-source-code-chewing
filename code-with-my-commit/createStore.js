@@ -12,15 +12,15 @@ export var ActionTypes = {
 }
 
 /**
- * Creates a Redux store that holds the state tree.
- * The only way to change the data in the store is to call `dispatch()` on it.
+ * 创建一个用于管理 state 树的 Redux store 对象。
+ * 修改 store 中数据的唯一方式就是调用 store 对象上的 `dispatch()` 方法。
+ * 
+ * 一个应用只能拥有单一 store。
+ * state 树的不同部分会根据 action 作出响应，为了区分这些不同，你可以使用 `combineReducers` 
+ * 函数将多个 reducer 函数拼装到一个单一的 reducer 函数上。
  *
- * There should only be a single store in your app. To specify how different
- * parts of the state tree respond to actions, you may combine several reducers
- * into a single reducer function by using `combineReducers`.
- *
- * @param {Function} reducer A function that returns the next state tree, given
- * the current state tree and the action to handle.
+ * @param {Function} reducer 一个 return 下一个 state 树的函数，
+ * 这个函数接收当前 state 和 action，用来处理当前 state 并产生下一个 state。
  *
  * @param {any} [preloadedState] The initial state. You may optionally specify it
  * to hydrate the state from the server in universal apps, or to restore a

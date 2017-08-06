@@ -22,25 +22,20 @@ export var ActionTypes = {
  * @param {Function} reducer 一个 return 下一个 state 树的函数，
  * 这个函数接收当前 state 和 action，用来处理当前 state 并产生下一个 state。
  *
- * @param {any} [preloadedState] The initial state. You may optionally specify it
- * to hydrate the state from the server in universal apps, or to restore a
- * previously serialized user session.
- * If you use `combineReducers` to produce the root reducer function, this must be
- * an object with the same shape as `combineReducers` keys.
+ * @param {any} [preloadedState] 初始 state。可选参数，在一般的应用中，该参数可以用于
+ * 整合来自服务端的状态，也可以用来保存前一次的用户会话记录（session）。
+ * 如果你使用 `combineReducers` 来生产 root reducer 函数，该参数必须是一个和 
+ * `combineReducers` 的属性的形式一样的对象。
  *
- * @param {Function} enhancer The store enhancer. You may optionally specify it
- * to enhance the store with third-party capabilities such as middleware,
- * time travel, persistence, etc. The only store enhancer that ships with Redux
- * is `applyMiddleware()`.
+ * @param {Function} enhancer store 的增强器。可选参数，该参数用于增强 store，我们可以通过
+ * 第三方例如中间件、时间旅行、持久化等功能来增强 store。`applyMiddleware()` 是唯一由 Redux 
+ * 提供的增强器。
  *
- * @returns {Store} A Redux store that lets you read the state, dispatch actions
- * and subscribe to changes.
- */
-/**
- * 整个文件输出的函数仅此一个
+ * @returns {Store} 一个 Redux store 对象，通过该对象你可以读取 state，触发 action，
+ * 并订阅（监听）state 的更新。
  */
 export default function createStore(reducer, preloadedState, enhancer) {
-   /* -------------- createStore 参数校验部分 -------------- */
+  /* -------------- createStore 参数校验部分 -------------- */
   /**
    * 参数校验，如果第二个形参传入的是函数，且第三个形参不传，则第二个实参代表 enhancer。
    * 换句话说，preloadedState 是可选配置。

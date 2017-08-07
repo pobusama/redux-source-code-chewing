@@ -49,7 +49,18 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (typeof enhancer !== 'function') {
       throw new Error('Expected the enhancer to be a function.')
     }
-
+    /**
+     * 从这里可以看出，enhancer 的一般形式是：
+     * const enhancer = (createStore) => {
+     *  //返回一个函数 `finalCreateStore`，用于接收 reducer 和 preloadedState
+     *  return function finalCreateStore (reducer, preloadedState) {
+     *    //这里可以拿到原 createStore、reducer 和 preloadedState
+     *    //然后添加自定义逻辑
+     *    //最终返回 store 对象
+     *    return createStore(reducer, preloadedState);
+     *  } 
+     * }
+     */
     return enhancer(createStore)(reducer, preloadedState)
   }
   // 校验传入的 reducer 实参是否是函数。

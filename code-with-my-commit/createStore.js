@@ -68,6 +68,14 @@ export default function createStore(reducer, preloadedState, enhancer) {
     throw new Error('Expected the reducer to be a function.')
   }
   /* -------------- createStore 正片部分 -------------- */
+  /**
+   * 定义的几个变量：
+   * 1. currentReducer：当前 store 应用的 reducer，默认使用传入的 reducer 参数，可通过
+   * replaceReducer 函数来热替换 currentReducer。
+   * 2. currentState：默认为传入的 preloadedState 参数，可通过 dispatch 函数改变。
+   * 3. currentListeners：当前订阅队列，用以存放通过 subscribe 函数执行的订阅。
+   * 4. isDispatching：dispatch 函数的标志位，作用后面会讲到。
+   */
   var currentReducer = reducer
   var currentState = preloadedState
   var currentListeners = []
@@ -114,16 +122,31 @@ export default function createStore(reducer, preloadedState, enhancer) {
    */
   function subscribe(listener) {
     /* -------------- subscribe 参数校验部分 -------------- */
+    // listener 必须是函数类型（state 变更以后调用）
     if (typeof listener !== 'function') {
       throw new Error('Expected listener to be a function.')
     }
 
     /* -------------- subscribe 正片部分 -------------- */
-    var isSubscribed = true
+    // 每次订阅都会维护一个标志位，以便在重复取消订阅的时候提高性能
+    var isSubscribed = true 
 
-    ensureCanMutateNextListeners()
+    /**
+     * 为了方便阅读，这里把源码中的 `ensureCanMutateNextListeners()` 替换成其实际代码
+     * 从字面意思理解：“确认可以修改 nextListeners 变量”
+     * 1. 确认有什么用处呢？
+     * 2. 为什么每次修改都要复制一份 currentListeners 到 nextListeners 上修改，
+     * 而不是直接在 currentListeners 上修改呢？
+     * 
+     */
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice()
+    }
     nextListeners.push(listener)
 
+    /**
+     * 取消订阅
+     */
     return function unsubscribe() {
       if (!isSubscribed) {
         return
@@ -171,49 +194,49 @@ export default function createStore(reducer, preloadedState, enhancer) {
         'Use custom middleware for async actions.'
       )
     }
-
-    // 最基础的 dispatch 函数（没有接入三方中间件）接受的 action 对象必须要带 type 参数
+    // 最基础的 dispatch 函数（没有接入三方中间件）接收的 action 对象必须要带 type 参数。
     if (typeof action.type === 'undefined') {
       throw new Error(
         'Actions may not have an undefined "type" property. ' +
         'Have you misspelled a constant?'
       )
     }
-
-    // 标识位
+    /**
+     * 标识位，用来锁定 reducer 计算过程，
+     * 如果 reducer 计算过程中调用了 dispatch 函数则会报错（为什么不能调用用？请接着往下看）。
+     */
     if (isDispatching) {
       throw new Error('Reducers may not dispatch actions.')
     }
-
     /* -------------- dispatch 正片部分 -------------- */
     try {
-      // 处理过程锁
       /**
        * 这是 Redux 的灵魂部分
        * 作用是将当前 state 和 action 交给 reducer 函数处理，计算出**新的 state**
-       * 注意！在 Reducer 函数中要避免调用 dispatch 
+       * 注意！在 reducer 函数中要避免调用 dispatch 
        * 原因类似银行取钱：假设你和女朋友共存了 100 元，在某时刻，你取 10 块钱
        * 此时银行系统便会对你的账户计算：`100 - 10 = 90`
        * 如果计算过程中你女朋友取 20 元，那么银行系统又会计算：`100 - 20 = 80`
        * 那结果到底是 90 还是 80 呢？
        * 当然是 70 ！
-       * 银行家的做法是在你取钱 -> 结算完毕过程中冻结其他存取操作（在本源码中是置 isDispatching 标识位为 true），
-       * 你女朋友只能在你取钱 -> 结算过程以外的时间里取钱。
-       */ 
-      isDispatching = true
-      currentState = currentReducer(currentState, action)
+       * 银行家的做法是在你 “取钱 -> 结算完毕” 过程中冻结其他存取操作（在本源码中是置 isDispatching 标识位为 true），
+       * 你女朋友只能在你 “取钱 -> 结算完毕” 过程以外的时间里取钱。
+       */
+      isDispatching = true // 更改过程锁
+      currentState = currentReducer(currentState, action) // 将当前 state 和 action 交给 reducer 计算
     } finally {
       // 无论计算成功还是报错，最终都将标志位置为 false，以免阻碍下一个 action 的 dipatch。
       isDispatching = false
     }
-
-    // 此时 state 已经更新完毕，我们执行订阅的回调函数里拿到的是更新后的 state。
+    /**
+     * 此时 state 已经更新完毕，我们将订阅队列中的函数一一执行
+     * 我们在这些函数里可以拿到更新后的 state。
+     */
     var listeners = currentListeners = nextListeners
     for (var i = 0; i < listeners.length; i++) {
       listeners[i]()
     }
-
-    // 此处设伏笔，在 applyMiddleware 里有妙用
+    // 此处设伏笔，在 applyMiddleware 里有妙用。
     return action
   }
 
@@ -237,7 +260,9 @@ export default function createStore(reducer, preloadedState, enhancer) {
      * 2. 初始化 state
      */
     currentReducer = nextReducer
-    dispatch({ type: ActionTypes.INIT })
+    dispatch({
+      type: ActionTypes.INIT
+    })
   }
 
   /**
@@ -270,7 +295,9 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
         observeState()
         var unsubscribe = outerSubscribe(observeState)
-        return { unsubscribe }
+        return {
+          unsubscribe
+        }
       },
 
       [$$observable]() {
@@ -279,14 +306,13 @@ export default function createStore(reducer, preloadedState, enhancer) {
     }
   }
 
-  // When a store is created, an "INIT" action is dispatched so that every
-  // reducer returns their initial state. This effectively populates
-  // the initial state tree.
   /**
-   * 触发一个内部 action
-   * 用 raducer 的 initial state 初始化 state 整个树
+   * 触发一个内部 action，这样每个 reducer 都返回其 intial state，
+   * 我们用各个子 raducer 的 initial state 初始化 state 整个树。
    */
-  dispatch({ type: ActionTypes.INIT })
+  dispatch({
+    type: ActionTypes.INIT
+  })
 
   return {
     dispatch,

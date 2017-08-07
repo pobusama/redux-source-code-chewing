@@ -28,3 +28,8 @@ Redux 库十分简洁，只有 5 个 API 文件，我根据关联度，对它们
 既然是写给自己看的，难免忽略一些已经滚熟的点。但万一会有好奇宝宝进来呢？嗯，熟悉 ES6，稍微熟悉函数式编程，no more~
 
 ## 文章列表
+
+## 文章提及 demo 使用方式
+1. 克隆仓库：`git clone https://github.com/pobusama/redux-source-code-chewing.git && cd redux-source-code-chewing`
+2. 安装依赖包：`npm i`
+3. 运行 demo（如 demo1）：`npm run demo1`

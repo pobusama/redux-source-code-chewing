@@ -142,20 +142,23 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (nextListeners === currentListeners) {
       nextListeners = currentListeners.slice()
     }
-    nextListeners.push(listener)
+    nextListeners.push(listener)// 向 listeners 队列中添加订阅函数
 
     /**
      * 取消订阅
      */
     return function unsubscribe() {
+      // 防止重复取消订阅时，再次进行下面比较耗费性能的运算
       if (!isSubscribed) {
         return
       }
-
+      // 取消订阅先把标志位置 false
       isSubscribed = false
 
       ensureCanMutateNextListeners()
+      // 找到订阅函数在订阅队列中的位置
       var index = nextListeners.indexOf(listener)
+      // 删除订阅队列中的相应订阅函数。
       nextListeners.splice(index, 1)
     }
   }

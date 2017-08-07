@@ -4,7 +4,8 @@
   "description": "the analysis of redux source code",
   "main": "index.js",
   "scripts": {
-    "demo1": "babel-node demo1/index.js"
+    "demo1": "babel-node demo1/index.js",
+    "demo2": "babel-node demo2/index.js"
   },
   "repository": {
     "type": "git",

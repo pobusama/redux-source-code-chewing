@@ -246,5 +246,99 @@ function getState() {
 ```
 
 ### 订阅（监听）state 的变化 —— subscribe
-我们目前有了初始 state，有了更新 state 的方式，还有获取当前 state 的方式。但我们不可能在每次 dispatch 后都手动获取 state，再执行相应代码，那如何在每次 state 变化后自动执行一系列的代码呢？细心的你肯定已在 dispatch 函数的视线中略见一斑了。
-我们继续看 subscribe 函数：
+我们目前有了初始 state，有了更新 state 的方式，还有获取当前 state 的方式。但我们如何监听 state 的变化呢？细心的你肯定已在 dispatch 函数的实现代码中初见端倪了。
+好我们来看 subscribe 函数：
+
+```js
+function subscribe(listener) {
+    /* -------------- subscribe 参数校验部分 -------------- */
+    // listener 必须是函数类型（state 变更以后调用）
+    if (typeof listener !== 'function') {
+      throw new Error('Expected listener to be a function.')
+    }
+
+    /* -------------- subscribe 正片部分 -------------- */
+    // 每次订阅都会维护一个标志位，以便在重复取消订阅的时候提高性能
+    var isSubscribed = true 
+
+    ensureCanMutateNextListeners()
+    nextListeners.push(listener)// 向 listeners 队列中添加订阅函数
+
+    /**
+     * 取消订阅
+     */
+    return function unsubscribe() {
+      // 防止重复取消订阅时，再次进行下面比较耗费性能的运算
+      if (!isSubscribed) {
+        return
+      }
+      // 取消订阅先把标志位置 false
+      isSubscribed = false
+
+      ensureCanMutateNextListeners()
+      // 找到订阅函数在订阅队列中的位置
+      var index = nextListeners.indexOf(listener)
+      // 删除订阅队列中的相应订阅函数。
+      nextListeners.splice(index, 1)
+    }
+```
+粗略看下来逻辑还是比较清晰的，该 API 提供了订阅和取消订阅的功能，订阅时，向内部维护的订阅队列（nextListeners）中 push 订阅函数。这时候我们回顾一下 dispatch ，state 变更后将 nextListeners 数组中的订阅函数按顺序执行，这就完成了订阅 -> 执行订阅函数的循环。
+```js
+var listeners = currentListeners = nextListeners
+for (var i = 0; i < listeners.length; i++) {
+    listeners[i]()
+}
+```
+此外，subscribe 返回一个 unsubscribe 函数用于取消订阅。 unsubscribe 利用 subscribe 函数闭包变量 listener，定位到订阅队列的相应位置，然后删除相应订阅函数。
+
+我在 [`demo2`]() 中简单地演示了一下取消订阅的用法，请运行 `npm run demo2` 查看结果。
+```js
+// demo2
+// ... 以上是相同的代码
+// 这回添加了两个监听函数
+const subscribeA = store.subscribe(() => {
+    console.log('subscribeA do this:')
+    printState(store);
+});
+const subscribeB = store.subscribe(() => {
+    console.log('subscribeB do this:')
+    printState(store);
+});
+// 执行 dispatch 后，监听函数依次执行
+store.dispatch({
+    type: ADD,
+    payload: {
+        text: 'learn Redux',
+        completed: false
+    }
+});
+/**
+* 这一步打印：
+* subscribeA do this:
+* current state: [{"text":"learn Redux","completed":false}]
+* subscribeB do this:
+* current state: [{"text":"learn Redux","completed":false}]
+*/
+// 取消 subscribeB 订阅函数
+subscribeB();
+// 现在执行 dispatch 后，只有 subscribeA 订阅函数会执行。
+store.dispatch({
+    type: ADD,
+    payload: {
+        text: 'learn React',
+        completed: false
+    }
+});
+/**
+* 这一步打印：
+* subscribeA do this:
+* current state: [{"text":"learn Redux","completed":false},{"text":"learn React",
+* "completed":false}]
+*/
+```
+
+慢着！我们好像漏看了两行代码！subscribe 函数中出现了两次 `ensureCanMutateNextListeners()`，它们是干什么用的呢？
+
+从字面理解，这行代码用于 “确认可以修改 nextListeners 变量”。还是不懂？没关系！
+
+

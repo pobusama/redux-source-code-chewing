@@ -27,10 +27,16 @@ const todos = (state = [], action) => {
 }
 // store
 const store = createStore(todos);
+// 这里定义一个用来打印 state 的函数
 const printState = store => 
     console.log(`current state:`, JSON.stringify(store.getState()));
 printState(store);
-// subscribe
+/**
+* 这里打印出 state 初始值:
+* current state: []
+*/
+
+// 订阅 state 的变化并打印变化后的 state
 store.subscribe(() => {
     printState(store);
 });
@@ -42,6 +48,10 @@ store.dispatch({
         completed: false
     }
 });
+/**
+* 这里打印：
+* current state: [{"text":"learn Redux","completed":false}]
+*/
 ```
 运行一下这段代码（`npm run demo1`），控制台输出：
 ```

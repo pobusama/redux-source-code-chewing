@@ -98,8 +98,9 @@ export default function createStore(reducer, preloadedState, enhancer) {
   }
 
   /**
-   * 添加一个订阅 state 变更的监听函数。该监听函数将会在 action 分发后，state 树完成可能
-   * 的变更之后被调用。接着你可以在这个回调中通过调用 `getState()` 来读取当前 state。
+   * 添加一个订阅 state 变更的监听函数（listener）。该监听函数将会在 action 分发后，
+   * state 树完成可能的变更之后被调用。接着你可以在这个回调中通过调用 `getState()` 
+   * 来读取当前 state。
    *
    * 你可能会在一个监听函数中调用 `dispatch()`，请知晓以下注意事项：
    *
@@ -112,6 +113,10 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * the listener is called. It is, however, guaranteed that all subscribers
    * registered before the `dispatch()` started will be called with the latest
    * state by the time it exits.
+   * 
+   * 2. 因为在监听函数执行前，state 有可能在一个嵌套的 `dispatch()` 中更新多次，所以监听
+   * 函数不一定能跟踪到所有的 state 变更。然而，我们保证了当 state 更新到最新的时候，执行所有
+   * 在 `dispatch()` 运行前注册的订阅函数。
    *
    * @param {Function} listener A callback to be invoked on every dispatch.
    * @returns {Function} A function to remove this change listener.

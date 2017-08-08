@@ -401,5 +401,5 @@ if (nextListeners === currentListeners) {
     nextListeners = currentListeners.slice()
 }
 ```
-再回到第 5 个订阅函数函数，我们在其执行时添加订阅函数。毫无疑问此时 `nextListeners === currentListeners` 是为 true 的，我们通过 `nextListeners = currentListeners.slice()` 将当前订阅队列拷贝了一份，获得了新的数组对象地址，然后赋值给 `nextListeners`，用这个数组添加订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “离得更近的订阅队列记录”，也就是更新 listeners 变量，再行循环执行。至此，我们完成逻辑上的闭环。
+再回到 “第 5 个订阅函数”，我们在其执行时添加订阅函数。毫无疑问此时 `nextListeners === currentListeners` 为 true，我们通过 `nextListeners = currentListeners.slice()` 将当前订阅队列拷贝了一份，获得了新的数组对象地址，然后赋值给 `nextListeners`，用这个数组添加订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “离得更近的订阅队列记录”，也就是更新 listeners 变量，再行循环执行。至此，我们完成逻辑上的闭环。
 

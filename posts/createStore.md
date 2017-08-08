@@ -291,6 +291,7 @@ function subscribe(listener) {
       // 删除订阅队列中的相应订阅函数。
       nextListeners.splice(index, 1)
     }
+}
 ```
 粗略看下来逻辑还是比较清晰的，该 API 提供了订阅和取消订阅的功能，订阅时，向内部维护的订阅队列（nextListeners）中 push 订阅函数。这时候我们回顾一下 dispatch ，state 变更后将 nextListeners 数组中的订阅函数按顺序执行，这就完成了订阅 -> 执行订阅函数的循环。
 ```js
@@ -347,8 +348,58 @@ store.dispatch({
 */
 ```
 
-慢着！我们好像漏看了两行代码！subscribe 函数中出现了两次 `ensureCanMutateNextListeners()`，它们是干什么用的呢？
+慢着！我们好像漏看了两行代码！subscribe 函数中出现了两次 `ensureCanMutateNextListeners()`，它们是干什么用的呢？从字面理解，这行代码用于 “确认可以修改 nextListeners 变量”。还是不懂？没关系！
+我们把 `ensureCanMutateNextListeners()` 替换成这个函数具体代码：
 
-从字面理解，这行代码用于 “确认可以修改 nextListeners 变量”。还是不懂？没关系！
+```js
+function subscribe(listener) {
+    //...
+    var isSubscribed = true
 
+    // 替换 ensureCanMutateNextListeners()
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice()
+    }
+    // 向 listeners 队列中添加订阅函数
+    nextListeners.push(listener)
+
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return
+      }
+      isSubscribed = false
+
+      // 替换 ensureCanMutateNextListeners()
+      if (nextListeners === currentListeners) {
+        nextListeners = currentListeners.slice()
+      }
+      // 找到订阅函数在订阅队列中的位置
+      var index = nextListeners.indexOf(listener)
+      // 删除订阅队列中的相应订阅函数。
+      nextListeners.splice(index, 1)
+    }
+}
+```
+结合函数名 “ensureCanMutateNextListeners”，和函数代码，我们可以提出以下两个问题：
+1. “确认” 有什么用处呢？
+2. 为什么要复制一份 currentListeners 到 nextListeners 上修改，而不是直接在 currentListeners 上修改呢？
+
+带着这两个问题，我们回头看一下 subscribe 函数的注释：
+```js
+
+```
+我们仔细看第二条注意事项，它强调了 “如果你在订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程”。“订阅函数正在执行的时候” 依然对应的是 dispatch 函数中的代码：
+```js
+var listeners = currentListeners = nextListeners
+for (var i = 0; i < listeners.length; i++) {
+    listeners[i]()
+}
+```
+设想一共有 10 个订阅函数，我们在第 5 个订阅函数执行过程中又增加一个订阅函数。我们知道这段代码是同步执行的，执行到第 5 个时，**循环没有执行完，后面 5 个订阅函数也没有执行**，此时若操作 “listeners”，“currentListeners”，“nextListeners” 任意一个数组变量（他们都指向同一个数组对象的地址），都会影响后面的循环。想要不影响后面的循环？`ensureCanMutateNextListeners()` 登场。
+```js
+if (nextListeners === currentListeners) {
+    nextListeners = currentListeners.slice()
+}
+```
+再回到第 5 个订阅函数函数，我们在其执行时添加订阅函数。毫无疑问此时 `nextListeners === currentListeners` 是为 true 的，我们通过 `nextListeners = currentListeners.slice()` 将当前订阅队列拷贝了一份，获得了新的数组对象地址，然后赋值给 `nextListeners`，用这个数组添加订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “离得更近的订阅队列记录”，也就是更新 listeners 变量，再行循环执行。至此，我们完成逻辑上的闭环。
 

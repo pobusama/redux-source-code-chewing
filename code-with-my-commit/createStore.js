@@ -98,18 +98,14 @@ export default function createStore(reducer, preloadedState, enhancer) {
   }
 
   /**
-   * Adds a change listener. It will be called any time an action is dispatched,
-   * and some part of the state tree may potentially have changed. You may then
-   * call `getState()` to read the current state tree inside the callback.
+   * 添加一个订阅 state 变更的监听函数。该监听函数将会在 action 分发后，state 树完成可能
+   * 的变更之后被调用。接着你可以在这个回调中通过调用 `getState()` 来读取当前 state。
    *
-   * You may call `dispatch()` from a change listener, with the following
-   * caveats:
+   * 你可能会在一个监听函数中调用 `dispatch()`，请知晓以下注意事项：
    *
-   * 1. The subscriptions are snapshotted just before every `dispatch()` call.
-   * If you subscribe or unsubscribe while the listeners are being invoked, this
-   * will not have any effect on the `dispatch()` that is currently in progress.
-   * However, the next `dispatch()` call, whether nested or not, will use a more
-   * recent snapshot of the subscription list.
+   * 1. 在每次调用 `dispatch()` 之前，订阅队列都会被暂时记录。如果你在订阅函数正在执行的时候
+   * 订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程。而下次调用 
+   * `dispatch()` 时，无论其是否嵌套，它都会应用一个离得更近的订阅队列记录。
    *
    * 2. The listener should not expect to see all state changes, as the state
    * might have been updated multiple times during a nested `dispatch()` before
@@ -137,6 +133,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
      * 1. 确认有什么用处呢？
      * 2. 为什么每次修改都要复制一份 currentListeners 到 nextListeners 上修改，
      * 而不是直接在 currentListeners 上修改呢？
+     *
      * 
      */
     if (nextListeners === currentListeners) {

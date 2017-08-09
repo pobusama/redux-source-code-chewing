@@ -386,9 +386,35 @@ function subscribe(listener) {
 
 带着这两个问题，我们回头看一下 subscribe 函数的注释：
 ```js
-
+/**
+   * 添加一个订阅 state 变更的监听函数（listener）。该监听函数将会在 action 分发后，
+   * state 树完成可能的变更之后被调用。接着你可以在这个回调中通过调用 `getState()` 
+   * 来读取当前 state。
+   *
+   * 你可能会在一个监听函数中调用 `dispatch()`，请知晓以下注意事项：
+   * 
+   * 1. 监听函数只应当在响应用户的 actions 或者特殊的条件限制下（比如：在 store 有一个
+   * 特殊字段时 dispatch action）才能调用 dispatch()。虽然不作任何条件限制而在监听函数中
+   * 调用 dispatch() 在技术上是可行的，但是随着每次 dispatch() 改变 store 可能会导致陷
+   * 入无穷的循环。
+   * 
+   * 2. 在每次调用 `dispatch()` 之前，订阅队列（subscriptions）会保存一份快照。如果你在
+   * 订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 
+   * 过程。但下次调用 `dispatch()` 时，无论其是否嵌套，订阅队列应用都会应用订阅列表里最近的
+   * 一次快照。
+   *
+   * 3. 因为在监听函数执行前，state 有可能在一个嵌套的 `dispatch()` 中改变多次，所以监听
+   * 函数不一定能跟踪到所有的 state 变更。保证所有的监听器都注册在 dispatch() 启动之前，
+   * 这样，在调用监听器的时候就会传入监听器所存在时间里最新的一次 state。
+   *
+   * @param {Function} listener 每当 dispatch action 的时候都会执行的回调函数。
+   * @returns {Function} 一个用来移除函数变化监听器的函数。
+   */
+  function subscribe(listener) {
+      //...
+  }
 ```
-我们仔细看第二条注意事项，它强调了 “如果你在订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程”。“订阅函数正在执行的时候” 依然对应的是 dispatch 函数中的代码：
+我们仔细看第 2 条注意事项，它强调了 “如果你在订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程”。“订阅函数正在执行的时候” 依然对应的是 dispatch 函数中的代码：
 ```js
 var listeners = currentListeners = nextListeners
 for (var i = 0; i < listeners.length; i++) {
@@ -397,9 +423,10 @@ for (var i = 0; i < listeners.length; i++) {
 ```
 设想一共有 10 个订阅函数，我们在第 5 个订阅函数执行过程中又增加一个订阅函数。我们知道这段代码是同步执行的，执行到第 5 个时，**循环没有执行完，后面 5 个订阅函数也没有执行**，此时若操作 “listeners”，“currentListeners”，“nextListeners” 任意一个数组变量（他们都指向同一个数组对象的地址），都会影响后面的循环。想要不影响后面的循环？`ensureCanMutateNextListeners()` 登场。
 ```js
+// ensureCanMutateNextListeners()
 if (nextListeners === currentListeners) {
     nextListeners = currentListeners.slice()
 }
 ```
-再回到 “第 5 个订阅函数”，我们在其执行时添加订阅函数。毫无疑问此时 `nextListeners === currentListeners` 为 true，我们通过 `nextListeners = currentListeners.slice()` 将当前订阅队列拷贝了一份，获得了新的数组对象地址，然后赋值给 `nextListeners`，用这个数组添加订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “离得更近的订阅队列记录”，也就是更新 listeners 变量，再行循环执行。至此，我们完成逻辑上的闭环。
+再回到 “第 5 个订阅函数”，我们在其执行时添加订阅函数。毫无疑问此时 `nextListeners === currentListeners` 为 true，我们通过 `nextListeners = currentListeners.slice()` 将当前订阅队列拷贝了一份，获得了新的数组对象地址，然后赋值给 `nextListeners`，用这个数组添加订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “应用订阅列表里最近的一次快照”，也就是更新 listeners 变量，接着再循环执行订阅队列。至此，我们完成逻辑上的闭环。
 

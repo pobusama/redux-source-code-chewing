@@ -103,23 +103,22 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * 来读取当前 state。
    *
    * 你可能会在一个监听函数中调用 `dispatch()`，请知晓以下注意事项：
-   *
-   * 1. 在每次调用 `dispatch()` 之前，订阅队列都会被暂时记录。如果你在订阅函数正在执行的时候
-   * 订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程。而下次调用 
-   * `dispatch()` 时，无论其是否嵌套，它都会应用一个离得更近的订阅队列记录。
-   *
-   * 2. The listener should not expect to see all state changes, as the state
-   * might have been updated multiple times during a nested `dispatch()` before
-   * the listener is called. It is, however, guaranteed that all subscribers
-   * registered before the `dispatch()` started will be called with the latest
-   * state by the time it exits.
    * 
-   * 2. 因为在监听函数执行前，state 有可能在一个嵌套的 `dispatch()` 中更新多次，所以监听
-   * 函数不一定能跟踪到所有的 state 变更。然而，我们保证了当 state 更新到最新的时候，执行所有
-   * 在 `dispatch()` 运行前注册的订阅函数。
+   * 1. 监听函数只应当在响应用户的 actions 或者特殊的条件限制下（比如：在 store 有一个
+   * 特殊字段时 dispatch action）才能调用 dispatch()。虽然不作任何条件限制而在监听函数中
+   * 调用 dispatch() 在技术上是可行的，但是随着每次 dispatch() 改变 store 可能会导致陷
+   * 入无穷的循环。
+   * 
+   * 2. 在每次调用 `dispatch()` 之前，订阅队列（subscriptions）会保存一份快照。如果你在
+   * 订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 
+   * 过程。但下次调用 `dispatch()` 时，无论其是否嵌套，它都会应用订阅列表里最近的一次快照。
    *
-   * @param {Function} listener A callback to be invoked on every dispatch.
-   * @returns {Function} A function to remove this change listener.
+   * 3. 因为在监听函数执行前，state 有可能在一个嵌套的 `dispatch()` 中改变多次，所以监听
+   * 函数不一定能跟踪到所有的 state 变更。保证所有的监听器都注册在 dispatch() 启动之前，
+   * 这样，在调用监听器的时候就会传入监听器所存在时间里最新的一次 state。
+   *
+   * @param {Function} listener 每当 dispatch action 的时候都会执行的回调函数。
+   * @returns {Function} 一个用来移除函数变化监听器的函数。
    */
   function subscribe(listener) {
     /* -------------- subscribe 参数校验部分 -------------- */

@@ -83,13 +83,19 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * You may call `dispatch()` from a change listener, with the following
    * caveats:
    *
-   * 1. The subscriptions are snapshotted just before every `dispatch()` call.
+   * 1. The listener should only call dispatch() either in response to user actions
+   * or under specific conditions (e. g. dispatching an action when the store has
+   * a specific field). Calling dispatch() without any conditions is technically 
+   * possible, however it leads to an infinite loop as every dispatch() call 
+   * usually triggers the listener again.
+   * 
+   * 2. The subscriptions are snapshotted just before every `dispatch()` call.
    * If you subscribe or unsubscribe while the listeners are being invoked, this
    * will not have any effect on the `dispatch()` that is currently in progress.
    * However, the next `dispatch()` call, whether nested or not, will use a more
    * recent snapshot of the subscription list.
    *
-   * 2. The listener should not expect to see all state changes, as the state
+   * 3. The listener should not expect to see all state changes, as the state
    * might have been updated multiple times during a nested `dispatch()` before
    * the listener is called. It is, however, guaranteed that all subscribers
    * registered before the `dispatch()` started will be called with the latest

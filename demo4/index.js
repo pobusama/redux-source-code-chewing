@@ -21,6 +21,7 @@ printState(store); // 打印：current state: []
 
 // subscribe
 const subscribeA = store.subscribe(() => {
+    subscribeA();
     // dispatch
     store.dispatch({
         type: ADD,

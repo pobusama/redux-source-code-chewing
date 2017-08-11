@@ -133,12 +133,6 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
     /**
      * 为了方便阅读，这里把源码中的 `ensureCanMutateNextListeners()` 替换成其实际代码
-     * 从字面意思理解：“确认可以修改 nextListeners 变量”
-     * 1. 确认有什么用处呢？
-     * 2. 为什么每次修改都要复制一份 currentListeners 到 nextListeners 上修改，
-     * 而不是直接在 currentListeners 上修改呢？
-     *
-     * 
      */
     if (nextListeners === currentListeners) {
       nextListeners = currentListeners.slice()

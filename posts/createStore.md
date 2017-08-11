@@ -470,4 +470,27 @@ store.dispatch({
 * 说明已经应用了最新的快照
 */
 ```
+现在，我们回答一开始提出的两个问题
+1. “确认” 有什么用处呢？- 确认当前队列和 “快照“ 是否一致，若一致则开辟新的快照。
+2. 为什么要复制一份 currentListeners 到 nextListeners 上修改，而不是直接在 currentListeners 上修改呢？ - 保存 “快照”，屏蔽订阅或取消订阅对当前循环的影响。
 
+读到这里我们基本理解了 subscribe 的各种小心思。不过说实话作为框架使用者，我很少直接用到 subscribe 这个 API，它一般是 Redux 与其他库（比如 react）的桥接库（react-redux）的宠儿，参与管理 view 的顶层数据。换句话说，理解了 subscribe 的内部逻辑，以后读 react-redux 库的逻辑会更加轻车熟路，正所谓 “技多不压身” 嘛！
+
+### 偷梁换柱 —— replaceReducer
+replaceReducer 只做了两件事情，首先用接收的 nextReducer 替换内部的 currentReducer，接着用 `dispatch({type: ActionTypes.INIT})` 来初始化 state（至于为什么这样初始化，我在 dispatch 小节中有提到）。
+
+```js
+function replaceReducer(nextReducer) {
+    if (typeof nextReducer !== 'function') {
+      throw new Error('Expected the nextReducer to be a function.')
+    }
+    /**
+     * 1. 替换当前 Reducer
+     * 2. 初始化 state
+     */
+    currentReducer = nextReducer
+    dispatch({
+      type: ActionTypes.INIT
+    })
+  }
+```

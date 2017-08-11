@@ -414,7 +414,7 @@ function subscribe(listener) {
       //...
   }
 ```
-我们仔细看第 2 条注意事项，它强调了 “如果你在订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程”。“订阅函数正在执行的时候” 依然对应的是 dispatch 函数中的代码：
+我们仔细看第 2 条注意事项，它强调了 “如果你在订阅函数正在执行的时候订阅或者取消订阅，那这次订阅或取消订阅并不会影响本次 `dispatch()` 过程”。“订阅函数正在执行的时候” 对应的是 dispatch 函数中的代码：
 ```js
 var listeners = currentListeners = nextListeners
 for (var i = 0; i < listeners.length; i++) {
@@ -428,5 +428,46 @@ if (nextListeners === currentListeners) {
     nextListeners = currentListeners.slice()
 }
 ```
-再回到 “第 5 个订阅函数”，我们在其执行时添加订阅函数。毫无疑问此时 `nextListeners === currentListeners` 为 true，我们通过 `nextListeners = currentListeners.slice()` 将当前订阅队列拷贝了一份，获得了新的数组对象地址，然后赋值给 `nextListeners`，用这个数组添加订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “应用订阅列表里最近的一次快照”，也就是更新 listeners 变量，接着再循环执行订阅队列。至此，我们完成逻辑上的闭环。
+再回到 “第 5 个订阅函数”，如果我们在其执行时调用 subscribe 添加或取消订阅函数，此刻 `nextListeners === currentListeners` 为 true，我们通过 `nextListeners = currentListeners.slice()` **将当前订阅队列拷贝了一份，获得了新的数组对象地址**，然后赋值给 `nextListeners`（这里也就是源码注释里所说的 “快照”），用这个数组添加或取消订阅函数。这样丝毫没有影响 `listeners` 数组的循环过程，一直到执行订阅函数的循环结束。而下一次执行 `dispatch()` 时，`var listeners = currentListeners = nextListeners` 这段代码使订阅队列应用 “应用订阅列表里最近的一次快照”，更新了 listeners 变量，接着再循环执行订阅队列。至此，我们完成逻辑上的闭环。
+
+这次我们用 demo3（`npm run demo3`）来解释这个过程。
+```js
+//demo3
+// ... 以上是相同的代码
+// subscribe
+const subscribeA = store.subscribe(() => {
+    printState(store);
+    //在订阅函数中取消 subscribeA 订阅（改变订阅队列）
+    subscribeA();
+    //增加 subscribeB 的监听（也会改变订阅队列）
+    const subscribeB = store.subscribe(() => console.log('subscribeB'));
+});
+// dispatch
+store.dispatch({
+    type: ADD,
+    payload: {
+        text: 'learn Redux',
+        completed: false
+    }
+});
+/**
+* 第一次执行 dispatch，触发 subscribeA 订阅函数
+* 这里执行完后打印：current state: [{"text":"learn Redux","completed":false}]
+* 说明 dispatch 期间订阅队列没有受到影响
+*/
+
+store.dispatch({
+    type: ADD,
+    payload: {
+        text: 'learn React',
+        completed: false
+    }
+});
+/**
+* 第二次 dispatch，应用最近的快照
+* 由于取消了 subscribeA 增加了 subscribeB 所以快照里只有 subscribeB。
+* 这里执行完后打印：subscribeB
+* 说明已经应用了最新的快照
+*/
+```
 

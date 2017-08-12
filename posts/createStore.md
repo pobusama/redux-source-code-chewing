@@ -62,7 +62,7 @@ current state: [{"text":"learn Redux","completed":false}]
 回顾完毕，接下来来看看 Redux 是怎么实现这几个 API 的。
 
 ## 源码分析
-### createStore 参数
+### createStore 的参数
 
 读懂文档是读懂源码的第一步，我们先看下 `createStore` 的 API 文档（酱油翻译，轻喷⇁_⇁）说了些啥：
 
@@ -159,6 +159,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
 3. currentListeners：当前订阅队列，用以存放通过 subscribe 函数执行的订阅。
 4. nextListeners：subscribe 函数可以订阅或取消订阅，`nextListeners` 用来存放订阅或取消订阅后的队列。
 5. isDispatching：dispatch 函数的标志位，作用后面会讲到。
+
 我们大致了解了这些变量的基本用处。接下来你一定以为我会顺着源码聊到 `getState()`，哈哈那怎么是我的风格！
 
 ### 触发 state 的变化 —— dispatch
@@ -293,16 +294,21 @@ function subscribe(listener) {
     }
 }
 ```
-粗略看下来逻辑还是比较清晰的，该 API 提供了订阅和取消订阅的功能，订阅时，向内部维护的订阅队列（nextListeners）中 push 订阅函数。这时候我们回顾一下 dispatch ，state 变更后将 nextListeners 数组中的订阅函数按顺序执行，这就完成了订阅 -> 执行订阅函数的循环。
+粗略看下来逻辑还是比较清晰的，该 API 提供了订阅和取消订阅的功能，订阅时，向内部维护的订阅队列（nextListeners）中 push 订阅函数。这时候我们回顾一下 dispatch 的部分代码：
 ```js
+//...
 var listeners = currentListeners = nextListeners
 for (var i = 0; i < listeners.length; i++) {
     listeners[i]()
 }
+//...
 ```
+这里在 state 变更后将 nextListeners 数组中的订阅函数按顺序执行，这就完成了订阅 -> 执行订阅函数的流程。
+
 此外，subscribe 返回一个 unsubscribe 函数用于取消订阅。 unsubscribe 利用 subscribe 函数闭包变量 listener，定位到订阅队列的相应位置，然后删除相应订阅函数。
 
-我在 [`demo2`]() 中简单地演示了一下取消订阅的用法，请运行 `npm run demo2` 查看结果。
+我在 [`demo2`](https://github.com/pobusama/redux-source-code-chewing/tree/master/demo2) 中简单地演示了一下取消订阅的用法，请运行 `npm run demo2` 查看结果。
+
 ```js
 // demo2
 // ... 以上是相同的代码
@@ -471,13 +477,14 @@ store.dispatch({
 */
 ```
 现在，我们回答一开始提出的两个问题
-1. “确认” 有什么用处呢？- 确认当前队列和 “快照“ 是否一致，若一致则开辟新的快照。
-2. 为什么要复制一份 currentListeners 到 nextListeners 上修改，而不是直接在 currentListeners 上修改呢？ - 保存 “快照”，屏蔽订阅或取消订阅对当前循环的影响。
+1. “确认” 有什么用处呢？—— 确认当前队列和 “快照“ 是否一致，若一致则开辟新的快照。
+2. 为什么要复制一份 currentListeners 到 nextListeners 上修改，而不是直接在 currentListeners 上修改呢？ —— 保存 “快照”，屏蔽订阅或取消订阅对当前循环的影响。
 
 读到这里我们基本理解了 subscribe 的各种小心思。不过说实话作为框架使用者，我很少直接用到 subscribe 这个 API，它一般是 Redux 与其他库（比如 react）的桥接库（react-redux）的宠儿，参与管理 view 的顶层数据。换句话说，理解了 subscribe 的内部逻辑，以后读 react-redux 库的逻辑会更加轻车熟路，正所谓 “技多不压身” 嘛！
 
 ### 偷梁换柱 —— replaceReducer
 replaceReducer 只做了两件事情，首先用接收的 nextReducer 替换内部的 currentReducer，接着用 `dispatch({type: ActionTypes.INIT})` 来初始化 state（至于为什么这样初始化，我在 dispatch 小节中有提到）。
+这个 API 的代码非常简单，但给应用提供的可能性是无穷的，目前我还没遇到直接使用 replaceReducer 的场景，等遇到了再回头来扩充。
 
 ```js
 function replaceReducer(nextReducer) {
@@ -494,3 +501,10 @@ function replaceReducer(nextReducer) {
     })
   }
 ```
+
+### [$$observable]
+这个 API 连官方文档也没有清晰的解释。同样等遇到了使用场景再回头来看。
+
+## 总结
+总的来说，createStore 是 Redux 最核心的部分。它提供创建 store 对象的方式。而 store 对象则是管理应用里唯一一个 state 树的工具。通读 createStore 的源码，我掌握了以下几个要点：
+1. 

@@ -120,7 +120,9 @@ function assertReducerSanity(reducers) {
  * 与 reducers 对象结构相同的 state 对象。
  */
 export default function combineReducers(reducers) {
+  // 取 reducers 对象的属性，存到 reducerKeys 数组中
   var reducerKeys = Object.keys(reducers)
+  // 定义一个用来存放筛选后 reducers 属性的对象。
   var finalReducers = {}
   /**
    * 遍历 reducers 对象上的属性，
@@ -129,14 +131,13 @@ export default function combineReducers(reducers) {
    */
   for (var i = 0; i < reducerKeys.length; i++) {
     var key = reducerKeys[i]
-
     if (process.env.NODE_ENV !== 'production') {
-      // 非空校验
+      // 属性空警告
       if (typeof reducers[key] === 'undefined') {
         warning(`No reducer provided for key "${key}"`)
       }
     }
-    // 筛选为函数的 reducer
+    // 筛选为类型函数的 reducer
     if (typeof reducers[key] === 'function') {
       finalReducers[key] = reducers[key]
     }
@@ -144,31 +145,35 @@ export default function combineReducers(reducers) {
   // 这里 finalReducers 是筛选完毕后的 reducers 对象
   var finalReducerKeys = Object.keys(finalReducers)
 
-  // ？开发环境下对未知 reducer 作缓存
+  // 开发环境下用于 warning 信息，暂不细究
   if (process.env.NODE_ENV !== 'production') {
     var unexpectedKeyCache = {}
   }
 
+  // 定义该异常变量用于完善性检测
   var sanityError
   try {
     /**
      * 完善性检测
-     * 检验 finalReducers 对象上的每一个子 reducer 能否按照 redux 定义的规则处理 action。
+     * 检验 finalReducers 对象上的每一个子 reducer 能否按照 redux 定义的规则处理 action，
      * 并 return 正确的 state。
+     * 如果不满足完善性检测，则抛出异常
      */
     assertReducerSanity(finalReducers)
   } catch (e) {
     sanityError = e
   }
 
-  // 组合 finalReducers 对象上的子 reducer 逻辑，
-  // 返回最终的 rootReducer。
+  /**
+   * 最终返回的 rootReducer 函数组合了 finalReducers 对象上的子 reducer 逻辑。
+   */
   return function combination(state = {}, action) {
-    //如果未通过完善性检测，则中断并抛出异常。
+    // 如果未通过完善性检测，则中断并抛出异常。
     if (sanityError) {
       throw sanityError
     }
 
+    // 开发环境下用于 warning 信息，暂不细究
     if (process.env.NODE_ENV !== 'production') {
       var warningMessage = getUnexpectedStateShapeWarningMessage(state, finalReducers, action, unexpectedKeyCache)
       if (warningMessage) {
@@ -178,38 +183,40 @@ export default function combineReducers(reducers) {
 
     // 用以判断 state 是否被改变的标识位
     var hasChanged = false
+    // 定义该对象用于保存更改后的 state 树
     var nextState = {}
-    //再一次遍历 finalReducerKeys 对象上的子 reducer。
+    //再一次遍历 finalReducerKeys 对象上的子 reducer 属性。
     for (var i = 0; i < finalReducerKeys.length; i++) {
       var key = finalReducerKeys[i]
       var reducer = finalReducers[key]
       /**
-       * 用当前子 reducer 名字在 state 上获取或建立与 reducer 对应的 state 分支。
-       * 如果是初始化阶段，则是建立 state 分支，这个 state 分支的值是 undefined。
+       * 获取变更前 state 上与 reducer key 相对应的部分 state。
+       * 如果是初始化阶段，该 state 分支的值是 undefined。
        * 如果非初始化阶段，则是获取 state 分支的值。
        */
       var previousStateForKey = state[key]
-      // 用当前子 reducer 计算 action，返回与子 reducer 对应的 state 分支的值。
+      // 用当前 reducer 计算 action，返回计算后的部分 state。
       var nextStateForKey = reducer(previousStateForKey, action)
-      // 同样要检测一下子 reducer 有没有正确返回 state。
+      // 检测一下当前 reducer 有没有正确返回 state。
       if (typeof nextStateForKey === 'undefined') {
         var errorMessage = getUndefinedStateErrorMessage(key, action)
         throw new Error(errorMessage)
       }
-      // 将子 reducer 计算后的局部 state 挂在对应的 state 分支上
+      // 将子 reducer 计算后的部分 state 挂在对应的 state 树属性上
       nextState[key] = nextStateForKey
       /**
-       * 这里并不是直接用 state 与 nextState 对比，
-       * 由于两者都是对象，对象相比比地址。nextState 变量是刚才新定义的，肯定与 state 的地址不同。
        * 这里是对比每个 nextStateForKey 与 previousStateForKey，通过短路写法可以提高效率。
-       * 当然也同样存在对象相比比地址的情况。
-       * redux 的规则是，如果在 reducer 里面更新 state，不是直接修改 state，
+       * 对象相比比地址，如果 nextStateForKey 是 reducer 返回的新的 state，
+       * 与 previousStateForKey 地址不同 hasChanged 就会变 true。
+       * 
+       * reducer 的规则是，若要在 reducer 里面更新 state，不是直接修改 state，
        * 而是开辟新的地址修改并存放 newState，然后最终作为 reducer 的返回值。
-       * 也就是说如果某个子 reducer 更新了 state，
-       * 根据 redux 的规则，其 nextStateForKey 和 previousStateForKey 不可能相等。
+       * 根据该规则，如果 state “变更” 了，其 nextStateForKey 和 previousStateForKey 地址
+       * 不相等。
        */
       hasChanged = hasChanged || nextStateForKey !== previousStateForKey
     }
+    // 如果未改变，则返回旧 state，相应地 UI 方面也不用回流。
     return hasChanged ? nextState : state
   }
 }

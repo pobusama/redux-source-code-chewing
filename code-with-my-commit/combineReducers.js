@@ -17,10 +17,6 @@ function getUndefinedStateErrorMessage(key, action) {
   )
 }
 
-/**
- * 
- *  
- */
 function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, unexpectedKeyCache) {
   var reducerKeys = Object.keys(reducers)
   var argumentName = action && action.type === ActionTypes.INIT ?

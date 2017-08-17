@@ -8,7 +8,7 @@
 
 **提示：** 本文基于 Redux 的 3.6.0 版本
 
-## 用法回顾
+
 
 如果用一句话总结 Redux 的基本用法，那便是**创建 store，监听 state 变化，触发 action 使 state 变更**。写一段你不能再熟悉的代码：
 ```js
@@ -503,8 +503,13 @@ function replaceReducer(nextReducer) {
 ```
 
 ### [$$observable]
-这个 API 连官方文档也没有清晰的解释。同样等遇到了使用场景再回头来看。
+这个 API 我并没有在官方文档中找到清晰的解释。同样等遇到了使用场景再回头来看。
 
 ## 总结
-总的来说，createStore 是 Redux 最核心的部分。它提供创建 store 对象的方式。而 store 对象则是管理应用里唯一一个 state 树的工具。通读 createStore 的源码，我掌握了以下几个要点：
-1. 
+总的来说，createStore 是 Redux 最核心的部分。它提供创建 store 对象的方式。而 store 对象则是管理应用里唯一一个 state 树的工具。通读 createStore 的源码，我觉得下面几个要点比较重要：
+1. createStore 通过函数内存的方式存储 store 需要的变量，可有效隔绝外部影响。
+2. dispatch 通过触发监听函数队列的方式协助 subscribe 实现订阅机制。
+3. rducer 必须要有默认返回对象（一般是当前 state）。
+4. 在同一轮订阅函数队列的执行过程中，增加或取消订阅只会影响下次订阅队列执行。这个可以通过 “快照” 的方式来实现。
+
+That's all~

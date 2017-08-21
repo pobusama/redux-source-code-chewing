@@ -1,4 +1,9 @@
 function bindActionCreator(actionCreator, dispatch) {
+  /**
+   * 实际上对 actionCreator 和 dispatch 进行绑定的地方
+   * 使用 "..." 解构语法将传入 actionCreator 的实参
+   * 原封不动传给绑定后的函数 
+   */ 
   return (...args) => dispatch(actionCreator(...args))
 }
 
@@ -25,9 +30,10 @@ function bindActionCreator(actionCreator, dispatch) {
  */
 export default function bindActionCreators(actionCreators, dispatch) {
   if (typeof actionCreators === 'function') {
+    // 如果形参 actionCreators 传入的是单个 function 直接返回绑定后的函数。
     return bindActionCreator(actionCreators, dispatch)
   }
-
+  // 无效参数校验
   if (typeof actionCreators !== 'object' || actionCreators === null) {
     throw new Error(
       `bindActionCreators expected an object or a function, instead received ${actionCreators === null ? 'null' : typeof actionCreators}. ` +
@@ -37,6 +43,7 @@ export default function bindActionCreators(actionCreators, dispatch) {
 
   var keys = Object.keys(actionCreators)
   var boundActionCreators = {}
+  // 遍历 actionCreators 对象上的函数集合，每个都进行 dispatch 绑定。
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i]
     var actionCreator = actionCreators[key]
@@ -44,5 +51,6 @@ export default function bindActionCreators(actionCreators, dispatch) {
       boundActionCreators[key] = bindActionCreator(actionCreator, dispatch)
     }
   }
+  // 返回绑定后的函数集合
   return boundActionCreators
 }

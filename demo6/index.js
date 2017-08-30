@@ -1,3 +1,4 @@
+//demo6
 import {compose} from 'redux';
 
 const fnA = (obj) => {
@@ -27,3 +28,8 @@ let obj = {}
 const composedFns = compose(fnA, fnB, fnC, fnD);
 
 console.log( composedFns(obj) );
+//fnD begin
+//fnC begin
+//fnB begin
+//fnA begin
+//{ d: 'd', c: 'c', b: 'b', a: 'a' }

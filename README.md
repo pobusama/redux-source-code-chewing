@@ -32,7 +32,7 @@ Redux 库十分简洁，只有 5 个 API 文件，我根据关联度，对它们
 - [ combineReucers —— 涓涓溪流，可成江海（2017.08.15）](https://github.com/pobusama/redux-source-code-chewing/blob/master/posts/combineReducers.md)
 - [ bindActionCreators —— 箭在弦上（2017.08.22）](https://github.com/pobusama/redux-source-code-chewing/blob/master/posts/bindActionCreators.md)
 - [ compose —— 管道工（2017.08.30）](https://github.com/pobusama/redux-source-code-chewing/blob/master/posts/compose.md)
-- [applyMiddleware —— Redux 的拓展坞](ttps://github.com/pobusama/redux-source-code-chewing/blob/master/posts/applyMiddleware.md)
+- [applyMiddleware —— Redux 的拓展坞（2017.09.03）](https://github.com/pobusama/redux-source-code-chewing/blob/master/posts/applyMiddleware.md)
 
 ## 文章提及 demo 使用方式
 1. 克隆仓库：`git clone https://github.com/pobusama/redux-source-code-chewing.git && cd redux-source-code-chewing`

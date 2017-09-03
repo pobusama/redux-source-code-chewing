@@ -127,3 +127,5 @@ applyMiddleware 区区十几行代码，为 redux 提供了对外接口，我们
 然而，这种 “自由” 依然是有限的，applyMiddleware 把这份自由限制在了分发 action 的过程中。不过，这正是 Redux 的智慧，毕竟过度的自由带来的是维护的灾难。
 
 但我们还是有权利获取更多的自由的，第一章里提到的 Enhancer 就是这个 “黑洞” 的入口。毕竟，applyMiddleware 也只是无数 Redux Enhancer 的一种。不过，这不在我们本次源码研究的讨论范围内。
+
+[禁止转载]

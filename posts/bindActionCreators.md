@@ -76,3 +76,4 @@ export default function bindActionCreators(actionCreators, dispatch) {
 ```
 核心逻辑和我此前提到的一样，不过源码比我们讨论的更进一步：它不但提供了绑定单一 actionCreator 函数的方式（actionCreators 形参接收一个函数），还提供了绑定多个函数的方式（actionCreators 形参接收一个对象）。此外依然做了严谨的参数校验，写工具函数时，我们可以借鉴这种思路。
 
+[暂不允许转载]

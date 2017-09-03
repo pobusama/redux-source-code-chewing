@@ -31,6 +31,7 @@ import compose from './compose'
  * }
  */
 export default function applyMiddleware(...middlewares) {
+  //返回 Redux Enhancer 函数（接收 store 对象、返回 store 对象）
   return (createStore) => (reducer, preloadedState, enhancer) => {
     // 获得原始 createStore 生成的 store
     var store = createStore(reducer, preloadedState, enhancer)
@@ -40,24 +41,18 @@ export default function applyMiddleware(...middlewares) {
     // 给中间件传入可用的 store API
     var middlewareAPI = {
       getState: store.getState,
-      // (action) => dispatch(action) 等价于 (action) => {return dispatch(action)}
-      // 函数内部的 dispatch 指向外层定义的 dispatch
-      // 当 middleware 内部执行 middlewareAPI.dispatch 方法时
-      // 这时的 dispatch 已经是 compose 之后的 dispatch
+      /**
+      * (action) => dispatch(action) 等价于 (action) => {return dispatch(action)}
+      * 函数内部的 dispatch 指向外层定义的 dispatch
+      * 当 middleware 内部执行 middlewareAPI.dispatch 方法时
+      * dispatch 已经是 compose 之后的 dispatch
+      */
       dispatch: (action) => dispatch(action) 
     }
-    // 为 middleware 分配统一的 middlewareAPI 后，将 middleware 返回的函数 handler 收集在 chain 数组中
+    // 为 middleware 分配统一的 middlewareAPI 后，将 middleware 返回的函数（这里称作 handler）收集在 chain 数组中
     chain = middlewares.map(middleware => middleware(middlewareAPI))
     // dispatch = handlerA(handlerB(handlerC(store.dispatch)))
     dispatch = compose(...chain)(store.dispatch)
-    
-    /**
-     * 最终返回的 dispatch 相当于：
-     * handlerA = store => next => action => {
-     *  
-     * }
-     */
-  
 
     return {
       ...store,

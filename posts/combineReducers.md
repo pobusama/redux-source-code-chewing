@@ -204,3 +204,5 @@ export default function combineReducers(reducers) {
 ```
 
 其实 combineReducers 工具函数我们也可以自己实现，只不过 redux 提供给我们的这个工具实现了比较完善的排错机制。我们这里就不详细讨论这些排错机制了，如果你有兴趣和我一起理解，请移步[我的注释的版本](https://github.com/pobusama/redux-source-code-chewing/blob/master/code-with-my-commit/combineReducers.js)～
+
+[暂不允许转载]

@@ -513,3 +513,5 @@ function replaceReducer(nextReducer) {
 4. 在同一轮订阅函数队列的执行过程中，增加或取消订阅只会影响下次订阅队列执行。这个可以通过 “快照” 的方式来实现。
 
 That's all~
+
+[暂不允许转载]

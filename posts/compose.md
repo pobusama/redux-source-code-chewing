@@ -173,3 +173,8 @@ export default function compose(...funcs) {
    */
 }
 ```
+
+## 总结
+通过探索 Redux 实现的 compose 工具函数，我主要收获了以下两点
+1. 函数式编程中存在着一种 “管道” 思想，即通过多个函数组合成的 “管道”，对 “流过” 的数据进行处理，最终输出处理后的数据。
+2. reduce/reduceRight 的用法实践。由于 “函数是一等公民”，其地位等同于其他数据类型，所以 reduce/reduceRight 也可以用来累计一组函数。

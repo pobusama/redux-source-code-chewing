@@ -9,7 +9,9 @@
     "demo3": "babel-node demo3/index.js",
     "demo4": "babel-node demo4/index.js",
     "demo5": "babel-node demo5/index.js",
-    "demo6": "babel-node demo6/index.js"
+    "demo6": "babel-node demo6/index.js",
+    "demo7": "babel-node demo7/index.js",
+    "demo8": "babel-node demo8/index.js"
   },
   "repository": {
     "type": "git",

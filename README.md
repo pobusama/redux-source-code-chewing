@@ -25,7 +25,7 @@ Redux 库十分简洁，只有 5 个 API 文件，我根据关联度，对它们
 
 ## 上车指南
 1. ES6
-2. 熟悉 Redux (可以看我的[另外一篇文章](http://pobusama.github.io/2016/12/31/React%E6%8A%80%E6%9C%AF%E6%A0%88%E6%8E%A2%E7%A9%B6-Redux/))
+2. 熟悉 Redux (可以看我的[另外一篇文章](https://www.yuque.com/u116378/vtu6np/aufm35))
 3. A little bit 函数式编程
 
 ## 文章列表
